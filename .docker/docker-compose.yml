@@ -1,0 +1,28 @@
+services:
+
+  db:
+    container_name: ${APP_NAME}_db
+    build:
+      context: mariadb
+    ports:
+      - "6602:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: America/Lima
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - default
+    command: [ 'mariadbd', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci', '--default-authentication-plugin=mysql_native_password' ]
+
+volumes:
+  db-data:
+    name: ${APP_NAME}_mysql-data
+
+networks:
+  default:
+    name: ${APP_NAME}_network
+    external: true
