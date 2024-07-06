@@ -20,4 +20,6 @@ public class GsonHelper {
 		String jsonFromFile = new String(Files.readAllBytes(Paths.get(jsonFileDir)));
 		return gson.fromJson(jsonFromFile, type);
 	}
+
+
 }

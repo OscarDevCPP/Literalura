@@ -5,32 +5,57 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
-@Table(name = "books")
 public class Book {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
 	private Long id;
 
-	@Column(name = "title")
 	private String title;
 
-	@Column(name = "gutenberg_id")
 	private Long gutenbergId;
 
-	@Column(name = "keywords")
-	private String keywords;
+	@Transient
+	private List<String> languages;
 
-	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	@JoinTable(
-		name = "book_author",
-		joinColumns = @JoinColumn(name = "book_id"),
-		inverseJoinColumns = @JoinColumn(name = "author_id")
-	)
-	private List<Author> authors;
+	public Book() {
+	}
 
-	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "book")
-	private List<BookDisplayFormat> bookDisplayFormats;
+	public Book(Long gutenbergId, String title, List<String> languages) {
+		this.setGutenbergId(gutenbergId);
+		this.setTitle(title);
+		this.setLanguages(languages);
+	}
 
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public Long getGutenbergId() {
+		return gutenbergId;
+	}
+
+	public void setGutenbergId(Long gutenbergId) {
+		this.gutenbergId = gutenbergId;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public List<String> getLanguages() {
+		return languages;
+	}
+
+	public void setLanguages(List<String> languages) {
+		this.languages = languages;
+	}
 
 }
