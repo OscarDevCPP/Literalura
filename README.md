@@ -17,8 +17,6 @@ en la formación de **Java y Spring Boot G6 - ONE**
 - 📁 Administración de la base de datos como servicio mediante [Docker](https://www.docker.com/).
 - 💪 Automaticación para la gestión del contenedor Docker de Base de datos usando [GNU Make](https://www.makigas.es/series/make#:~:text=Make%20es%20una%20utilidad%20del,%2C%20CMake...).).
 
-![Aplicación en ejecución](docs/screen.gif)
-
 # ⚡️ Notas de ejecución
 
 A continuación se daran las instrucciones para ejecutar al aplicación en modo desarrollo
