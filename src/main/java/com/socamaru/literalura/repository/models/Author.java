@@ -2,7 +2,6 @@ package com.socamaru.literalura.repository.models;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -12,16 +11,19 @@ public class Author {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int birthYear;
+    private Long birthYear;
 
-    private int deathYear;
+    private Long deathYear;
 
     private String name;
+
+    @ManyToMany(mappedBy = "authors", fetch = FetchType.EAGER)
+    private List<Book> books;
 
     public Author() {
     }
 
-    public Author(String name, int birthYear, int deathYear) {
+    public Author(String name, Long birthYear, Long deathYear) {
         this.name = name;
         this.birthYear = birthYear;
         this.deathYear = deathYear;
@@ -43,20 +45,28 @@ public class Author {
         this.name = name;
     }
 
-    public int getBirthYear() {
+    public Long getBirthYear() {
         return birthYear;
     }
 
-    public void setBirthYear(int birthYear) {
+    public void setBirthYear(Long birthYear) {
         this.birthYear = birthYear;
     }
 
-    public int getDeathYear() {
+    public Long getDeathYear() {
         return deathYear;
     }
 
-    public void setDeathYear(int deathYear) {
+    public void setDeathYear(Long deathYear) {
         this.deathYear = deathYear;
+    }
+
+    public List<Book> getBooks() {
+        return books;
+    }
+
+    public void setBooks(List<Book> books) {
+        this.books = books;
     }
 
     @Transient

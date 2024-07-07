@@ -16,58 +16,67 @@ import java.util.Optional;
 
 public class GutendexApiService {
 
-	public Optional<BookDTO> searchByAuthorOrTitle(String searchString) {
-		searchString = String.join("%20", searchString.trim().split("\\s+"));
-		String BASE_URL = "https://gutendex.com/books/";
-		String endpoint = String.format("%s?search=%s", BASE_URL, searchString);
-		HttpResponse<String> response = HttpHelper.httpGet(endpoint);
-		JsonObject body = GsonHelper.toJsonObject(response.body());
-		JsonArray results = body.get("results").getAsJsonArray();
-		if(!results.isEmpty()){
-			JsonObject firstResult = results.get(0).getAsJsonObject();
-			List<AuthorDTO> authors = readAuthors(firstResult);
-			List<String> languages = readLanguages(firstResult);
-			BookDTO bookDTO = readBook(firstResult, authors, languages);
-			return Optional.of(bookDTO);
-		}
-		return Optional.empty();
-	}
+    public Optional<BookDTO> searchByAuthorOrTitle(String searchString) {
+        searchString = String.join("%20", searchString.trim().split("\\s+"));
+        String BASE_URL = "https://gutendex.com/books/";
+        String endpoint = String.format("%s?search=%s", BASE_URL, searchString);
+        HttpResponse<String> response = HttpHelper.httpGet(endpoint);
+        JsonObject body = GsonHelper.toJsonObject(response.body());
+        JsonArray results = body.get("results").getAsJsonArray();
+        if (!results.isEmpty()) {
+            JsonObject firstResult = results.get(0).getAsJsonObject();
+            List<AuthorDTO> authors = readAuthors(firstResult);
+            List<String> languages = readLanguages(firstResult);
+            BookDTO bookDTO = readBook(firstResult, authors, languages);
+            return Optional.of(bookDTO);
+        }
+        return Optional.empty();
+    }
 
-	private List<AuthorDTO> readAuthors(JsonObject bookObject) {
-		if (bookObject.has("authors") && !bookObject.get("authors").isJsonArray()) {
-			throw new GutendexReadDataException("Doesn't exists authors or isn't Array Type in gutendex response");
-		}
-		JsonArray authorsArrayData = bookObject.getAsJsonArray("authors");
-		List<AuthorDTO> authors = new LinkedList<>();
-		for (JsonElement element : authorsArrayData) {
-			JsonObject author = element.getAsJsonObject();
-			int birthYear = author.get("birth_year").getAsInt();
-			int deathYear = author.get("death_year").getAsInt();
-			String name = author.get("name").getAsString();
-			AuthorDTO authorDTO = new AuthorDTO(name, birthYear, deathYear);
-			authors.add(authorDTO);
-		}
-		return authors;
-	}
+    private List<AuthorDTO> readAuthors(JsonObject bookObject) {
+        if (bookObject.has("authors") && !bookObject.get("authors").isJsonArray()) {
+            throw new GutendexReadDataException("Doesn't exists authors or isn't Array Type in gutendex response");
+        }
+        JsonArray authorsArrayData = bookObject.getAsJsonArray("authors");
+        List<AuthorDTO> authors = new LinkedList<>();
+        for (JsonElement element : authorsArrayData) {
+            AuthorDTO authorDTO = getAuthorDTO(element);
+            authors.add(authorDTO);
+        }
+        return authors;
+    }
 
-	private List<String> readLanguages(JsonObject bookObject) {
-		if (bookObject.has("languages") && !bookObject.get("languages").isJsonArray()) {
-			throw new GutendexReadDataException("Doesn't exists languages or isn't Array Type in gutendex response");
-		}
-		JsonArray languagesArrayData = bookObject.getAsJsonArray("languages");
-		List<String> languages = new LinkedList<>();
-		for (JsonElement element : languagesArrayData) {
-			if (element.isJsonPrimitive())
-				languages.add(element.getAsString());
-		}
-		return languages;
-	}
+    private static AuthorDTO getAuthorDTO(JsonElement element) {
+        JsonObject author = element.getAsJsonObject();
+        Long birthYear = null, deathYear = null;
+        if (author.has("birth_year") && author.get("birth_year").isJsonPrimitive()) {
+            birthYear = author.get("birth_year").getAsLong();
+        }
+        if (author.has("death_year") && author.get("death_year").isJsonPrimitive()) {
+            deathYear = author.get("death_year").getAsLong();
+        }
+        String name = author.get("name").getAsString();
+        return new AuthorDTO(name, birthYear, deathYear);
+    }
 
-	private BookDTO readBook(JsonObject bookObject, List<AuthorDTO> authors, List<String> languages) {
-		Long id = bookObject.get("id").getAsLong();
-		String title = bookObject.get("title").getAsString();
-		Long downloadCount = bookObject.get("download_count").getAsLong();
-		return new BookDTO(id, title, authors, languages, downloadCount);
-	}
+    private List<String> readLanguages(JsonObject bookObject) {
+        if (bookObject.has("languages") && !bookObject.get("languages").isJsonArray()) {
+            throw new GutendexReadDataException("Doesn't exists languages or isn't Array Type in gutendex response");
+        }
+        JsonArray languagesArrayData = bookObject.getAsJsonArray("languages");
+        List<String> languages = new LinkedList<>();
+        for (JsonElement element : languagesArrayData) {
+            if (element.isJsonPrimitive())
+                languages.add(element.getAsString());
+        }
+        return languages;
+    }
+
+    private BookDTO readBook(JsonObject bookObject, List<AuthorDTO> authors, List<String> languages) {
+        Long id = bookObject.get("id").getAsLong();
+        String title = bookObject.get("title").getAsString();
+        Long downloadCount = bookObject.get("download_count").getAsLong();
+        return new BookDTO(id, title, authors, languages, downloadCount);
+    }
 
 }

@@ -14,6 +14,8 @@ public class Book {
 
 	private Long gutenbergId;
 
+    private Long downloads;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "book_idiom",
@@ -33,9 +35,10 @@ public class Book {
 	public Book() {
 	}
 
-	public Book(Long gutenbergId, String title) {
+	public Book(Long gutenbergId, String title, Long downloads) {
 		this.setGutenbergId(gutenbergId);
 		this.setTitle(title);
+        this.setDownloads(downloads);
 	}
 
 	public String getTitle() {
@@ -76,5 +79,19 @@ public class Book {
 
     public void setAuthors(List<Author> authors) {
         this.authors = authors;
+    }
+
+    public Long getDownloads() {
+        return downloads;
+    }
+
+    public void setDownloads(Long downloads) {
+        this.downloads = downloads;
+    }
+
+    @Transient
+    @Override
+    public String toString(){
+        return this.title;
     }
 }

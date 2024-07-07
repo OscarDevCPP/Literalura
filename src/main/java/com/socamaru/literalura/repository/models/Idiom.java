@@ -44,4 +44,12 @@ public class Idiom {
     public String toString(){
         return code;
     }
+
+    public List<Book> getBooks() {
+        return books;
+    }
+
+    public void setBooks(List<Book> books) {
+        this.books = books;
+    }
 }

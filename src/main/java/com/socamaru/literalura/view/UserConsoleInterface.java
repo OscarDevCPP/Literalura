@@ -37,17 +37,20 @@ public class UserConsoleInterface {
                         registerBookOption();
                         break;
                     case 2:
-                        showAuthorsOption();
+                        showBooksOption();
                         break;
                     case 3:
-                        showBooksOption();
+                        showAuthorsOption();
                         break;
                     case 4:
                         showAliveAuthorsOption();
                         break;
+                    case 5:
+                        showBookPerIdiomsOption();
+                        break;
                     default:
                         userWantsToExit = true;
-                        System.out.println("Bye, Thank you so much");
+                        System.out.println("Bye, Thank you so much.");
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
@@ -58,11 +61,13 @@ public class UserConsoleInterface {
 
     private int showMenu() {
         List<String> menuOptions = new LinkedList<>();
+        System.out.printf("%n ----- LITERALURA MENU OPTIONS ----- %n");
         menuOptions.add("1. Find and register book");
-        menuOptions.add("2. To list authors");
-        menuOptions.add("3. To list books");
-        menuOptions.add("4. To list Alive Authors between birthYear and deathYear");
-        menuOptions.add("5. Exit");
+        menuOptions.add("2. To list books");
+        menuOptions.add("3. To list authors");
+        menuOptions.add("4. To list Alive authors in a specific year");
+        menuOptions.add("5. To list books per code idiom");
+        menuOptions.add("6. Exit");
         menuOptions.forEach(System.out::println);
         return menuOptions.size();
     }
@@ -108,42 +113,57 @@ public class UserConsoleInterface {
             System.out.printf("Author N° %d:%n", i + 1);
             printAuthor(author);
         }
-        System.out.printf("found %d authors.%n", persistAuthors.size());
+        System.out.printf("has %d authors in your database.%n", persistAuthors.size());
     }
 
     private void showAliveAuthorsOption() {
-        Integer birthYear = null;
+        Integer year = null;
         String userInput = "";
-        while(birthYear == null){
-            try{
-                System.out.print("Enter birthYear: ");
+        while (year == null) {
+            try {
+                System.out.print("Enter a year to search: ");
                 userInput = consoleInputReader.nextLine();
-                birthYear = Integer.parseInt(userInput);
+                year = Integer.parseInt(userInput);
                 userInput = "";
-            }catch (NumberFormatException e){
-                System.out.printf("'%s' isn't valid, birthYear should be an integer.%n", userInput);
+            } catch (NumberFormatException e) {
+                System.out.printf("'%s' isn't valid, year should be an integer.%n", userInput);
             }
         }
-        Integer deathYear = null;
-        while(deathYear == null){
-            try{
-                System.out.print("Enter deathYear: ");
-                userInput = consoleInputReader.nextLine();
-                deathYear = Integer.parseInt(userInput);
-                userInput = "";
-            }catch (NumberFormatException e){
-                System.out.printf("'%s' isn't valid, deathYear should be an integer.%n", userInput);
-            }
-        }
-        List<Author> persistAuthors = authorRepository.findByBirthYearGreaterThanEqualAndDeathYearLessThanEqual(birthYear, deathYear);
+        List<Author> persistAuthors = authorRepository.findAuthorsAliveInYear(year);
         persistAuthors.forEach(this::printAuthor);
-        System.out.println("found " + persistAuthors.size() + " authors.");
+        if (year < 0) {
+            year = Math.abs(year);
+            System.out.printf("found %d authors alive in year: %d BC.%n", persistAuthors.size(), year);
+        } else {
+            System.out.printf("found %d authors alive in year: %d after Christ.%n", persistAuthors.size(), year);
+        }
     }
 
     private void showBooksOption() {
         List<Book> persistBooks = bookRepository.findAll();
         persistBooks.forEach(this::printBook);
-        System.out.printf("found %d books.%n", persistBooks.size());
+        System.out.printf("has %d books in  your database.%n", persistBooks.size());
+    }
+
+    private void showBookPerIdiomsOption() {
+        List<Idiom> persistIdioms = idiomRepository.findAll();
+        if (persistIdioms.isEmpty()) {
+            throw new RuntimeException("Not found idioms in your database.");
+        }
+        Idiom idiom = null;
+        while (idiom == null) {
+            System.out.printf("Enter a language code from the following available codes %s: ", BasicHelper.formatArray(persistIdioms, "|"));
+            String userInput = consoleInputReader.nextLine();
+            Optional<Idiom> optionalIdiom = idiomRepository.findByCodeWithBooks(userInput);
+            if (optionalIdiom.isPresent()) {
+                idiom = optionalIdiom.get();
+            } else {
+                System.out.printf("Code '%s' is not valid.%n", userInput);
+            }
+        }
+        List<Book> books = idiom.getBooks();
+        books.forEach(this::printBook);
+        System.out.printf("Found %d books for language code -> %s", books.size(), idiom.getCode());
     }
 
     private Optional<BookDTO> findBookInGutenberg(String bookToFind) {
@@ -154,7 +174,8 @@ public class UserConsoleInterface {
     private Book saveBook(BookDTO bookDTO) {
         List<Author> persistAuthors = getAndSaveAuthors(bookDTO.authors());
         List<Idiom> persistIdioms = getAndSaveIdioms(bookDTO.languages());
-        Book newBook = new Book(bookDTO.id(), bookDTO.title());
+        long downloads = Optional.ofNullable(bookDTO.downloadCount()).orElse(0L);
+        Book newBook = new Book(bookDTO.id(), bookDTO.title(), downloads);
         newBook.setAuthors(persistAuthors);
         newBook.setIdioms(persistIdioms);
         return bookRepository.save(newBook);
@@ -188,16 +209,25 @@ public class UserConsoleInterface {
 
     private void printBook(Book persistBook) {
         System.out.printf("******** %s ********%n", persistBook.getTitle());
-        System.out.println("gutenbergID: " + persistBook.getGutenbergId());
-        System.out.println("languages: " + BasicHelper.formatArray(persistBook.getIdioms(), ",", "."));
-        System.out.println("authors: " + BasicHelper.formatArray(persistBook.getAuthors(), ";", "."));
-        System.out.println("-------------");
+        System.out.println("Gutenberg ID: " + persistBook.getGutenbergId());
+        System.out.println("Idioms: " + BasicHelper.formatArray(persistBook.getIdioms(), ","));
+        System.out.println("Authors: " + BasicHelper.formatArray(persistBook.getAuthors(), ";"));
+        System.out.println("Number of downloads: " + persistBook.getDownloads());
+        System.out.println();
     }
 
     private void printAuthor(Author persistAuthor) {
+        String birthYear = Optional.ofNullable(persistAuthor.getBirthYear())
+            .map(String::valueOf)
+            .orElse("unknown :(");
+        String deathYear = Optional.ofNullable(persistAuthor.getDeathYear())
+            .map(String::valueOf)
+            .orElse("unknown :(");
+        System.out.println("****************");
         System.out.println("Name: " + persistAuthor.getName());
-        System.out.println("birthYear: " + persistAuthor.getBirthYear());
-        System.out.println("deathYear: " + persistAuthor.getDeathYear());
-        System.out.println("-------------");
+        System.out.println("Year of birth: " + birthYear);
+        System.out.println("Year of death: " + deathYear);
+        System.out.println("Books: " + BasicHelper.formatArray(persistAuthor.getBooks(), ";"));
+        System.out.println();
     }
 }
