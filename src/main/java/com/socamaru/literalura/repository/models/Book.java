@@ -14,16 +14,28 @@ public class Book {
 
 	private Long gutenbergId;
 
-	@Transient
-	private List<String> languages;
+    @ManyToMany
+    @JoinTable(
+        name = "book_idiom",
+        joinColumns = @JoinColumn(name = "idiom_id"),
+        inverseJoinColumns = @JoinColumn(name = "book_id")
+    )
+	private List<Idiom> idioms;
+
+    @ManyToMany
+    @JoinTable(
+        name = "author_book",
+        joinColumns = @JoinColumn(name = "book_id"),
+        inverseJoinColumns = @JoinColumn(name = "author_id")
+    )
+    private List<Author> authors;
 
 	public Book() {
 	}
 
-	public Book(Long gutenbergId, String title, List<String> languages) {
+	public Book(Long gutenbergId, String title) {
 		this.setGutenbergId(gutenbergId);
 		this.setTitle(title);
-		this.setLanguages(languages);
 	}
 
 	public String getTitle() {
@@ -50,12 +62,19 @@ public class Book {
 		this.id = id;
 	}
 
-	public List<String> getLanguages() {
-		return languages;
+	public List<Idiom> getIdioms() {
+		return idioms;
 	}
 
-	public void setLanguages(List<String> languages) {
-		this.languages = languages;
+	public void setIdioms(List<Idiom> idioms) {
+		this.idioms = idioms;
 	}
 
+    public List<Author> getAuthors() {
+        return authors;
+    }
+
+    public void setAuthors(List<Author> authors) {
+        this.authors = authors;
+    }
 }
