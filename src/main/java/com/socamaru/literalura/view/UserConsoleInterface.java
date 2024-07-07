@@ -36,6 +36,9 @@ public class UserConsoleInterface {
                     case 1:
                         registerBookOption();
                         break;
+                    case 2:
+                        showAuthorsOption();
+                        break;
                     default:
                         userWantsToExit = true;
                         System.out.println("Bye, Thank you so much");
@@ -49,15 +52,16 @@ public class UserConsoleInterface {
 
     private int showMenu() {
         List<String> menuOptions = new LinkedList<>();
-        menuOptions.add("1. Buscar y registrar libro");
-        menuOptions.add("2. Salir");
+        menuOptions.add("1. Find and register book");
+        menuOptions.add("2. To list authors");
+        menuOptions.add("3. Exit");
         menuOptions.forEach(System.out::println);
         return menuOptions.size();
     }
 
     private int readOption(int maxNumberOptions) {
         try {
-            System.out.print("Elije una opción: ");
+            System.out.print("Enter an option: ");
             int userOption = consoleInputReader.nextInt();
             consoleInputReader.nextLine(); // consume el salto de linea
             boolean isOptionInValidRange = userOption >= 1 && userOption <= maxNumberOptions;
@@ -75,7 +79,7 @@ public class UserConsoleInterface {
     }
 
     private void registerBookOption() {
-        System.out.print("Ingresa el nombre del libro a buscar: ");
+        System.out.print("Enter the name of the book: ");
         String bookToFind = consoleInputReader.nextLine();
         Optional<BookDTO> optionalBookDTO = findBookInGutenberg(bookToFind);
         if (optionalBookDTO.isEmpty()) {
@@ -90,6 +94,16 @@ public class UserConsoleInterface {
         }
         Book persistBook = saveBook(bookDTO);
         printBook(persistBook);
+    }
+
+    private void showAuthorsOption(){
+        List<Author> persistAuthors = authorRepository.findAll();
+        for (int i = 0; i < persistAuthors.size(); i++) {
+            Author author = persistAuthors.get(i);
+            System.out.printf("Author N° %d:%n", i + 1);
+            printAuthor(author);
+        }
+        System.out.printf("count %d authors.%n", persistAuthors.size());
     }
 
     private Optional<BookDTO> findBookInGutenberg(String bookToFind) {
@@ -138,6 +152,13 @@ public class UserConsoleInterface {
         System.out.println("gutenbergID: " + persistBook.getGutenbergId());
         System.out.println("languages: " + BasicHelper.formatArray(persistBook.getIdioms(), ",", "."));
         System.out.println("authors: " + BasicHelper.formatArray(persistBook.getAuthors(), ";", "."));
+        System.out.println("-------------");
+    }
+
+    private void printAuthor(Author persistAuthor) {
+        System.out.println("Name: " + persistAuthor.getName());
+        System.out.println("birthYear: " + persistAuthor.getBirthYear());
+        System.out.println("deathYear: " + persistAuthor.getDeathYear());
         System.out.println("-------------");
     }
 }
