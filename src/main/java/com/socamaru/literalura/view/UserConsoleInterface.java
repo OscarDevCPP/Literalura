@@ -42,6 +42,9 @@ public class UserConsoleInterface {
                     case 3:
                         showBooksOption();
                         break;
+                    case 4:
+                        showAliveAuthorsOption();
+                        break;
                     default:
                         userWantsToExit = true;
                         System.out.println("Bye, Thank you so much");
@@ -58,7 +61,8 @@ public class UserConsoleInterface {
         menuOptions.add("1. Find and register book");
         menuOptions.add("2. To list authors");
         menuOptions.add("3. To list books");
-        menuOptions.add("4. Exit");
+        menuOptions.add("4. To list Alive Authors between birthYear and deathYear");
+        menuOptions.add("5. Exit");
         menuOptions.forEach(System.out::println);
         return menuOptions.size();
     }
@@ -66,19 +70,16 @@ public class UserConsoleInterface {
     private int readOption(int maxNumberOptions) {
         try {
             System.out.print("Enter an option: ");
-            int userOption = consoleInputReader.nextInt();
-            consoleInputReader.nextLine(); // consume el salto de linea
+            int userOption = Integer.parseInt(consoleInputReader.nextLine());
             boolean isOptionInValidRange = userOption >= 1 && userOption <= maxNumberOptions;
             if (!isOptionInValidRange) {
                 throw new RuntimeException(String.format("option: %d doesn't exists", userOption));
             }
             return userOption;
-        } catch (InputMismatchException e) {
-            consoleInputReader.nextLine();
-            throw new RuntimeException("Input doesn't valid positive number");
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("input doesn't valid positive number");
         } catch (Exception e) {
-            consoleInputReader.nextLine();
-            throw new RuntimeException("Unknown error: " + e.getMessage(), e);
+            throw new RuntimeException("Error: " + e.getMessage(), e);
         }
     }
 
@@ -100,7 +101,7 @@ public class UserConsoleInterface {
         printBook(persistBook);
     }
 
-    private void showAuthorsOption(){
+    private void showAuthorsOption() {
         List<Author> persistAuthors = authorRepository.findAll();
         for (int i = 0; i < persistAuthors.size(); i++) {
             Author author = persistAuthors.get(i);
@@ -110,7 +111,36 @@ public class UserConsoleInterface {
         System.out.printf("found %d authors.%n", persistAuthors.size());
     }
 
-    private void showBooksOption(){
+    private void showAliveAuthorsOption() {
+        Integer birthYear = null;
+        String userInput = "";
+        while(birthYear == null){
+            try{
+                System.out.print("Enter birthYear: ");
+                userInput = consoleInputReader.nextLine();
+                birthYear = Integer.parseInt(userInput);
+                userInput = "";
+            }catch (NumberFormatException e){
+                System.out.printf("'%s' isn't valid, birthYear should be an integer.%n", userInput);
+            }
+        }
+        Integer deathYear = null;
+        while(deathYear == null){
+            try{
+                System.out.print("Enter deathYear: ");
+                userInput = consoleInputReader.nextLine();
+                deathYear = Integer.parseInt(userInput);
+                userInput = "";
+            }catch (NumberFormatException e){
+                System.out.printf("'%s' isn't valid, deathYear should be an integer.%n", userInput);
+            }
+        }
+        List<Author> persistAuthors = authorRepository.findByBirthYearGreaterThanEqualAndDeathYearLessThanEqual(birthYear, deathYear);
+        persistAuthors.forEach(this::printAuthor);
+        System.out.println("found " + persistAuthors.size() + " authors.");
+    }
+
+    private void showBooksOption() {
         List<Book> persistBooks = bookRepository.findAll();
         persistBooks.forEach(this::printBook);
         System.out.printf("found %d books.%n", persistBooks.size());
