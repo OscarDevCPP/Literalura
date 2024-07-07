@@ -39,6 +39,9 @@ public class UserConsoleInterface {
                     case 2:
                         showAuthorsOption();
                         break;
+                    case 3:
+                        showBooksOption();
+                        break;
                     default:
                         userWantsToExit = true;
                         System.out.println("Bye, Thank you so much");
@@ -54,7 +57,8 @@ public class UserConsoleInterface {
         List<String> menuOptions = new LinkedList<>();
         menuOptions.add("1. Find and register book");
         menuOptions.add("2. To list authors");
-        menuOptions.add("3. Exit");
+        menuOptions.add("3. To list books");
+        menuOptions.add("4. Exit");
         menuOptions.forEach(System.out::println);
         return menuOptions.size();
     }
@@ -71,7 +75,7 @@ public class UserConsoleInterface {
             return userOption;
         } catch (InputMismatchException e) {
             consoleInputReader.nextLine();
-            throw new RuntimeException("Input doesn't valid number");
+            throw new RuntimeException("Input doesn't valid positive number");
         } catch (Exception e) {
             consoleInputReader.nextLine();
             throw new RuntimeException("Unknown error: " + e.getMessage(), e);
@@ -103,7 +107,13 @@ public class UserConsoleInterface {
             System.out.printf("Author N° %d:%n", i + 1);
             printAuthor(author);
         }
-        System.out.printf("count %d authors.%n", persistAuthors.size());
+        System.out.printf("found %d authors.%n", persistAuthors.size());
+    }
+
+    private void showBooksOption(){
+        List<Book> persistBooks = bookRepository.findAll();
+        persistBooks.forEach(this::printBook);
+        System.out.printf("found %d books.%n", persistBooks.size());
     }
 
     private Optional<BookDTO> findBookInGutenberg(String bookToFind) {
@@ -147,8 +157,7 @@ public class UserConsoleInterface {
     }
 
     private void printBook(Book persistBook) {
-        System.out.println("-------------");
-        System.out.println("Title: " + persistBook.getTitle());
+        System.out.printf("******** %s ********%n", persistBook.getTitle());
         System.out.println("gutenbergID: " + persistBook.getGutenbergId());
         System.out.println("languages: " + BasicHelper.formatArray(persistBook.getIdioms(), ",", "."));
         System.out.println("authors: " + BasicHelper.formatArray(persistBook.getAuthors(), ";", "."));

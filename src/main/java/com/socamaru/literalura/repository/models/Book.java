@@ -14,7 +14,7 @@ public class Book {
 
 	private Long gutenbergId;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "book_idiom",
         joinColumns = @JoinColumn(name = "idiom_id"),
@@ -22,7 +22,7 @@ public class Book {
     )
 	private List<Idiom> idioms;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "author_book",
         joinColumns = @JoinColumn(name = "book_id"),
